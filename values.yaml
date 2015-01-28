@@ -1,0 +1,53 @@
+-
+  setup_show:
+    msg_call: 'show_setup?'
+    restore: true
+  host:
+    data: localhost
+    restore: false
+  port:
+    data: 37035
+    restore: false
+  user:
+    data: ''
+    restore: false
+  pass:
+    data: ''
+    restore: false
+  database:
+    data: ''
+    restore: false
+  connect:
+    data: 0
+    restore: false
+    responder: connect
+  err_msg_show:
+    data: -1
+    restore: false
+  err_msg_data:
+    data: ''
+    restore: false
+-
+  collections:
+    data: []
+    restore: true
+  selected_collection:
+    data: ~
+    responder: select_collection
+    restore: false
+-
+  documents:
+    data: []
+  documents_count:
+    data: 9990
+    responder: set_document_values
+  documents_page:
+    data: 1
+    restore: false
+    responder: set_document_values
+  documents_pages:
+    data: 999
+  documents_per_page:
+    data: 10
+    restore: false
+    responder: set_document_values

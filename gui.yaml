@@ -1,0 +1,281 @@
+type: GUITree
+version: 1.0
+
+class: RSence.GUIApp
+extend:
+  returnHandler: |
+    ->
+      keyStatus = EVENT.status[EVENT.keysDown]
+      isReturn = keyStatus.indexOf(13) != -1
+      isRight = keyStatus.indexOf(39) != -1
+      isLeft = keyStatus.indexOf(37) != -1
+      isUp = keyStatus.indexOf(38) != -1
+      isDown = keyStatus.indexOf(38) != -1
+      if isReturn
+        setupForm = @getViewById('setupForm')
+        errorDisplay = @getViewById('errorDisplay')
+        unless errorDisplay.isHidden
+          @getViewById('errorDismiss').click()
+          return
+        connectButton = @getViewById('connectButton')
+        if connectButton.isSiblingOf(EVENT.activeControl)
+          connectButton.click()
+      else if isRight or isLeft
+        centerPanel = @getViewById('centerPanel')
+        activeControl = EVENT.activeControl
+        return unless activeControl
+        return if activeControl.hasAncestor(HTextControl)
+        if activeControl.isChildOf(centerPanel)
+          pageStepper = @getViewById('pageSelect2')
+          pageStepper.stepUp() if isRight
+          pageStepper.stepDown() if isLeft
+      else if isUp or isDown
+        leftPanel = @getViewById('leftPanel')
+        activeControl = EVENT.activeControl
+        return unless activeControl
+        if activeControl.isChildOf(leftPanel)
+          console.log('next or prev collection')
+options:
+  label: MongoTool
+  priority: 75
+subviews:
+- HView: # frame container
+    rect: [0, 0, 1024, 400, 0, 0]
+    style:
+      background: white
+      border: 1px solid blue
+    subviews:
+    - HLabel:
+        rect: [0, 0, ~, 24, 0, ~]
+        label: MongoTool
+        style:
+          textAlign: center
+          fontSize: 18px
+          fontWeight: bold
+          lineHeight: 24px
+          verticalAlign: middle
+    - HView: # setup form
+        id: setupForm
+        rect: [0, 24, ~, 54, 0, ~]
+        visible: false
+        style:
+          borderTop: 1px dotted black
+          background: '#f6f6f6'
+        subviews:
+        - HView: # centering
+            rect: [300, 0, ~, ~, 300, 0]
+            subviews:
+            - HLabel:
+                rect: [0, 4, 35, 20]
+                label: 'Host:'
+            - HTextControl:
+                id: hostField
+                rect: [35, 2, ~, 20, 102, ~]
+                bind: :values.host
+            - HLabel:
+                rect: [~, 4, 40, 20, 52, ~]
+                label: 'Port:'
+            - HNumericTextControl:
+                rect: [~, 2, 50, 20, 12, ~]
+                minValue: 1024
+                maxValue: 65536
+                options:
+                  refreshOnInput: false
+                bind: :values.port
+            - HStepper:
+                rect: [~, 1, 14, 22, 1, ~]
+                bind: :values.port
+                minValue: 1024
+                maxValue: 65536
+            - HLabel:
+                rect: [0, 29, 50, 20]
+                label: 'User:'
+            - HTextControl:
+                rect: [35, 27, 120, 20]
+                bind: :values.user
+            - HLabel:
+                rect: [160, 29, 50, 20]
+                label: 'Pass:'
+            - HPasswordControl:
+                rect: [195, 27, 120, 20]
+                bind: :values.pass
+            - HLabel:
+                rect: [320, 29, 30, 20]
+                label: 'DB:'
+            - HTextControl:
+                rect: [345, 27, ~, 20, 102, ~]
+                bind: :values.database
+            - HClickButton: # embossed border & return
+                rect: [~, 25, 100, 24, 0, ~]
+            - HClickButton:
+                id: connectButton
+                events:
+                  textEnter: true
+                  click: true
+                extend:
+                  textEnter: -> @app.returnHandler()
+                rect: [~, 25, 100, 24, 0, ~]
+                label: Connect
+                bind: :values.connect
+    - HView: # bottom part
+        id: bottomPart
+        rect: [0, 24, ~, ~, 0, 0]
+        style:
+          borderTop: 1px solid black
+          background: '#eeeeee'
+        subviews:
+        - HView: # left-hand panel; 300px wide
+            id: leftPanel
+            rect: [0, 0, 300, ~, ~, 0]
+            style:
+              background: '#e6e6e6'
+              borderRight: '1px solid #cccccc'
+            subviews:
+            - HRadioButtonList:
+                rect: [0, 0, ~, ~, 0, 0]
+                bind: :values.selected_collection
+                subviews:
+                - HListItems:
+                    bind: :values.collections
+        - HView: # center panel
+            id: centerPanel
+            rect: [301, 0, ~, ~, 301, 0]
+            subviews:
+            - HLabel:
+                rect: [8, 0, 70, 24]
+                label: 'Documents:'
+                style:
+                  lineHeight: 24px
+                  verticalAlign: middle
+            - HStringView:
+                rect: [78, 0, 60, 24]
+                bind: :values.documents_count
+                style:
+                  lineHeight: 24px
+                  verticalAlign: middle
+            - HLabel:
+                rect: [168, 0, 120, 24]
+                label: 'Documents per page:'
+                style:
+                  lineHeight: 24px
+                  verticalAlign: middle
+            - HPopupMenu:
+                rect: [290, 2, 60, 24]
+                bind: :values.documents_per_page
+                call:
+                  setListItems:
+                    - - 1
+                      - 5
+                      - 10
+                      - 25
+                      - 50
+                      - 100
+            - HLabel:
+                rect: [~, 0, 40, 24, 94, ~]
+                label: 'Page:'
+                style:
+                  textAlign: right
+                  lineHeight: 24px
+                  verticalAlign: middle
+            - HNumericTextControl:
+                id: pageSelect1
+                rect: [~, 2, 40, 20, 50, ~]
+                bind: :values.documents_page
+                minValue: 1
+                maxValue: 999999
+                style:
+                  textAlign: right
+            - HStepper:
+                id: pageSelect2
+                rect: [~, 1, 16, 21, 34, ~]
+                minValue: 1
+                maxValue: 999999
+                events:
+                  click: true
+                  mouseWheel: true
+                  mouseUp: true
+                  mouseDown: true
+                bind: :values.documents_page
+            - HLabel:
+                rect: [~, 0, 10, 24, 25, ~]
+                label: '/'
+                style:
+                  textAlign: right
+                  lineHeight: 24px
+                  verticalAlign: middle
+            - HStringView:
+                rect: [~, 0, 20, 24, 4, ~]
+                bind: :values.documents_pages
+                extend:
+                  refreshValue: |
+                    ->
+                      @base()
+                      return unless @app.getViewById?
+                      @app.getViewById('pageSelect1').setValueRange(0, @value)
+                      @app.getViewById('pageSelect2').setValueRange(0, @value)
+                style:
+                  lineHeight: 24px
+                  verticalAlign: middle
+                  textAlign: right
+            - HPropertyList:
+                rect: [0, 24, ~, ~, 0, 0]
+                bind: :values.documents
+        - HView: # right-hand panel; 300px wide
+            rect: [~, 0, 300, ~, 0, 0]
+            style:
+              background: '#e6e6e6'
+              borderLeft: '1px solid #cccccc'
+    - HCheckBox: # toggles setup form
+        rect: [~, 0, 65, 24, 0, ~]
+        label: Setup
+        bind: :values.setup_show
+        extend:
+          setVisibility: |
+            ->
+              if @value
+                @app.getViewById('setupForm').show()
+                @app.getViewById('bottomPart').animateTo(HPoint.new(0,78), 200, 60)
+                @app.getViewById('hostField').getInputElement().focus()
+              else
+                @app.getViewById('setupForm').hide()
+                @app.getViewById('bottomPart').offsetTo(0,24)
+          refreshValue: |
+            ->
+              if @app.getViewById?
+                @setVisibility()
+              else
+                @completionTest = true
+              @base()
+          idle: |
+            ->
+              if @drawn and @completionTest
+                @setVisibility()
+                @completionTest = false
+    - HSheet: # error display
+        id: errorDisplay
+        rect: [0, 0, 424, ~, ~, 0]
+        bind: :values.err_msg_show
+        subviews:
+        - HLabel:
+            rect: [0, 0, ~, 24, 0, ~]
+            label: 'Error Messages:'
+            style:
+              textAlign: center
+              fontSize: 18px
+              fontWeight: bold
+              lineHeight: 24px
+              verticalAlign: middle
+        - HTextArea:
+            rect: [0, 24, ~, ~, 0, 32]
+            bind: :values.err_msg_data
+            disabled: true
+        - HClickButton:
+            id: errorDismiss
+            rect: [~, ~, 80, 24, 4, 4]
+            label: Dismiss
+            bind: :values.err_msg_show
+    - HStringView: # reset link
+        rect: [~, 4, 38, 20, 70, ~]
+        value: '<a href="#/sign_out">Reset</a>'
+        events:
+          click: true
